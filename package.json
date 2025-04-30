@@ -1,0 +1,22 @@
+{
+  "name": "se_project_express",
+  "version": "1.0.0",
+  "description": "Sprint 12",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tripleten-com/se_project_express.git"
+  },
+  "author": "David Roman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tripleten-com/se_project_express/issues"
+  },
+  "homepage": "https://github.com/tripleten-com/se_project_express#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
