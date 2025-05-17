@@ -18,7 +18,7 @@ const auth = (req, res, next) => {
     return res.status(UNAUTHORIZED).send({ message: "Authorization required" });
   }
   req.user = payload;
-  next();
+  return next();
 };
 
 module.exports = auth;
