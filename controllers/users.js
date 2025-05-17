@@ -4,6 +4,7 @@ const { JWT_SECRET } = require("../utils/config");
 const User = require("../models/user");
 const {
   OK,
+  CREATED,
   BAD_REQUEST,
   UNAUTHORIZED,
   NOT_FOUND,
@@ -24,37 +25,41 @@ const getUsers = (req, res) => {
 };
 
 // Create user
-const createUser = (req, res) => {
-  const { name, avatar, email, password } = req.body;
+// controllers/users.js
 
-  bcrypt
-    .hash(password, 10)
-    .then((hash) =>
-      User.create({
-        name,
-        avatar,
-        email,
-        password: hash,
-      })
-    )
-    .then((user) =>
-      res
-        .status(201)
-        .send({ name: user.name, avatar: user.avatar, email: user.email })
-    )
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: err.message });
+const createUser = (req, res) => {
+  const { email, password } = req.body;
+
+  // Check if the email already exists in the database
+  User.findOne({ email })
+    .then((existingUser) => {
+      if (existingUser) {
+        // Email already exists, return a 409 status with a message
+        return res.status(CONFLICT).json({ message: "Email already exists" });
       }
-      if (err.code === 11000) {
-        return res.status(CONFLICT).send({
-          message: "User with this email already exists",
+
+      // If email doesn't exist, proceed to add new user
+      // Hash the password and save the user in the database
+      bcrypt
+        .hash(password, 10)
+        .then((hashedPassword) => {
+          const newUser = new User({ email, password: hashedPassword });
+
+          return newUser.save();
+        })
+        .then((savedUser) => {
+          res.status(CREATED).json({ message: "User created successfully" });
+        })
+        .catch((err) => {
+          // Handle any errors that occur during hashing or saving
+          res
+            .status(INTERNAL_SERVER_ERROR)
+            .json({ message: "Internal server error" });
         });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error occurred on the server" });
+    })
+    .catch((err) => {
+      // Handle any errors that occur during the email check
+      res.status(500).json({ message: "Internal server error" });
     });
 };
 
