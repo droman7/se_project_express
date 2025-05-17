@@ -25,47 +25,53 @@ const getUsers = (req, res) => {
 };
 
 // Create user
-// controllers/users.js
-
 const createUser = (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, name, avatar } = req.body;
 
-  // Check if the email already exists in the database
+  if (!email || !password) {
+    return res
+      .status(BAD_REQUEST)
+      .json({ message: "The 'email' and 'password' fields are required" });
+  }
+
   User.findOne({ email }).then((existingUser) => {
     if (existingUser) {
-      // Email already exists, return a 409 status with a message
       return res.status(CONFLICT).json({ message: "Email already exists" });
     }
 
-    // If email doesn't exist, proceed to add new user
-    // Hash the password and save the user in the database
     return bcrypt
       .hash(password, 10)
       .then((hashedPassword) => {
-        const newUser = new User({ email, password: hashedPassword });
-
+        const newUser = new User({
+          email,
+          password: hashedPassword,
+          name,
+          avatar,
+        });
         return newUser.save();
       })
       .then((savedUser) => {
-        const { _id, email: userEmail } = savedUser;
-        res
-          .status(CREATED)
-          .json({
-            _id,
-            email: userEmail,
-            message: "User created successfully",
-          });
+        const { _id, email: userEmail, name, avatar } = savedUser;
+        res.status(CREATED).json({
+          _id,
+          email: userEmail,
+          name,
+          avatar,
+        });
       })
       .catch((err) => {
-        // Handle any errors that occur during hashing or saving
         console.error(err);
-        res
+
+        if (err.name === "ValidationError") {
+          return res.status(BAD_REQUEST).json({ message: "Invalid user data" });
+        }
+
+        return res
           .status(INTERNAL_SERVER_ERROR)
           .json({ message: "Internal server error" });
       });
   });
 };
-
 // GET current user
 const getCurrentUser = (req, res) => {
   User.findById(req.user._id)
