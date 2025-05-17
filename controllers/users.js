@@ -28,7 +28,7 @@ const getUsers = (req, res) => {
 // controllers/users.js
 
 const createUser = (req, res) => {
-  const { email, password } = req.body;
+  const { password } = req.body;
 
   // Check if the email already exists in the database
   User.findOne({ email }).then((existingUser) => {
