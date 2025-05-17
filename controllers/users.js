@@ -31,36 +31,35 @@ const createUser = (req, res) => {
   const { email, password } = req.body;
 
   // Check if the email already exists in the database
-  User.findOne({ email })
-    .then((existingUser) => {
-      if (existingUser) {
-        // Email already exists, return a 409 status with a message
-        return res.status(CONFLICT).json({ message: "Email already exists" });
-      }
+  User.findOne({ email }).then((existingUser) => {
+    if (existingUser) {
+      // Email already exists, return a 409 status with a message
+      return res.status(CONFLICT).json({ message: "Email already exists" });
+    }
 
-      // If email doesn't exist, proceed to add new user
-      // Hash the password and save the user in the database
-      bcrypt
-        .hash(password, 10)
-        .then((hashedPassword) => {
-          const newUser = new User({ email, password: hashedPassword });
+    // If email doesn't exist, proceed to add new user
+    // Hash the password and save the user in the database
+    bcrypt
+      .hash(password, 10)
+      .then((hashedPassword) => {
+        const newUser = new User({ email, password: hashedPassword });
 
-          return newUser.save();
-        })
-        .then((savedUser) => {
-          res.status(CREATED).json({ message: "User created successfully" });
-        })
-        .catch((err) => {
-          // Handle any errors that occur during hashing or saving
-          res
-            .status(INTERNAL_SERVER_ERROR)
-            .json({ message: "Internal server error" });
-        });
-    })
-    .catch((err) => {
-      // Handle any errors that occur during the email check
-      res.status(500).json({ message: "Internal server error" });
-    });
+        return newUser.save();
+      })
+      .then((savedUser) => {
+        const { _id, email } = savedUser;
+        res
+          .status(CREATED)
+          .json({ _id, email, message: "User created successfully" });
+      })
+      .catch((err) => {
+        // Handle any errors that occur during hashing or saving
+        console.error(err);
+        res
+          .status(INTERNAL_SERVER_ERROR)
+          .json({ message: "Internal server error" });
+      });
+  });
 };
 
 // GET current user
