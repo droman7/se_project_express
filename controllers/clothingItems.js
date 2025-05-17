@@ -3,6 +3,7 @@ const {
   OK,
   CREATED,
   BAD_REQUEST,
+  FORBIDDEN,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
 } = require("../utils/errors");
@@ -100,10 +101,17 @@ const deleteItem = (req, res) => {
   const { itemId } = req.params;
 
   return clothingItem
-    .findByIdAndDelete(itemId)
+    .findById(itemId)
     .orFail()
     .then((item) => {
-      res.status(OK).send({ data: item });
+      if (item.owner.toString() !== req.user._id) {
+        return res
+          .status(FORBIDDEN)
+          .send({ message: "Not authorized to delete" });
+      }
+      return clothingItem
+        .findByIdAndRemove(itemId)
+        .then(() => res.status(OK).send({ message: "Item deleted" }));
     })
     .catch((err) => {
       console.error(err);
