@@ -28,7 +28,7 @@ const getUsers = (req, res) => {
 // controllers/users.js
 
 const createUser = (req, res) => {
-  const { password } = req.body;
+  const { email, password } = req.body;
 
   // Check if the email already exists in the database
   User.findOne({ email }).then((existingUser) => {
@@ -39,7 +39,7 @@ const createUser = (req, res) => {
 
     // If email doesn't exist, proceed to add new user
     // Hash the password and save the user in the database
-    bcrypt
+    return bcrypt
       .hash(password, 10)
       .then((hashedPassword) => {
         const newUser = new User({ email, password: hashedPassword });
@@ -47,10 +47,14 @@ const createUser = (req, res) => {
         return newUser.save();
       })
       .then((savedUser) => {
-        const { _id, email } = savedUser;
+        const { _id, email: userEmail } = savedUser;
         res
           .status(CREATED)
-          .json({ _id, email, message: "User created successfully" });
+          .json({
+            _id,
+            email: userEmail,
+            message: "User created successfully",
+          });
       })
       .catch((err) => {
         // Handle any errors that occur during hashing or saving
