@@ -72,6 +72,7 @@ const createUser = (req, res) => {
       });
   });
 };
+
 // GET current user
 const getCurrentUser = (req, res) => {
   User.findById(req.user._id)
