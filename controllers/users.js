@@ -94,6 +94,10 @@ const login = (req, res) => {
           .status(UNAUTHORIZED)
           .send({ message: "Authorization required" });
       }
+      console.error(err);
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error occurred on the server" });
     });
 };
 

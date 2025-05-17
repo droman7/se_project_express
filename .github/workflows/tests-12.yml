@@ -6,7 +6,6 @@ on:
       - "**"
     tags:
       - "**"
-  workflow_dispatch:
 jobs:
   read_sprint_file:
     runs-on: ubuntu-latest
