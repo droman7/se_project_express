@@ -23,7 +23,6 @@ app.use((req, res, next) => {
   };
   next();
 });
-app.use(auth);
 
 app.use("/", mainRouter);
 
