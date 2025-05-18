@@ -34,7 +34,7 @@ const createUser = (req, res) => {
       .json({ message: "The 'email' and 'password' fields are required" });
   }
 
-  User.findOne({ email }).then((existingUser) => {
+  return User.findOne({ email }).then((existingUser) => {
     if (existingUser) {
       return res.status(CONFLICT).json({ message: "Email already exists" });
     }
@@ -51,21 +51,25 @@ const createUser = (req, res) => {
         return newUser.save();
       })
       .then((savedUser) => {
-        const { _id, email: userEmail, name, avatar } = savedUser;
-        res.status(CREATED).json({
+        const {
           _id,
           email: userEmail,
-          name,
-          avatar,
+          name: savedName,
+          avatar: savedAvatar,
+        } = savedUser;
+
+        return res.status(CREATED).json({
+          _id,
+          email: userEmail,
+          name: savedName,
+          avatar: savedAvatar,
         });
       })
       .catch((err) => {
         console.error(err);
-
         if (err.name === "ValidationError") {
           return res.status(BAD_REQUEST).json({ message: "Invalid user data" });
         }
-
         return res
           .status(INTERNAL_SERVER_ERROR)
           .json({ message: "Internal server error" });
