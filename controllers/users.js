@@ -39,7 +39,7 @@ const createUser = (req, res) => {
     return res.status(BAD_REQUEST).json({ message: "Invalid email format" });
   }
 
-  User.findOne({ email }).then((existingUser) => {
+  return User.findOne({ email }).then((existingUser) => {
     if (existingUser) {
       return res.status(CONFLICT).json({ message: "Email already exists" });
     }
