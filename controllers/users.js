@@ -48,7 +48,7 @@ const createUser = (req, res) => {
       .hash(password, 10)
       .then((hash) => User.create({ name, avatar, email, password: hash }))
       .then((user) => {
-        return res.status(CREATED).send({
+        res.status(CREATED).send({
           name: user.name,
           avatar: user.avatar,
           email: user.email,
@@ -107,7 +107,6 @@ const login = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      // Handle any errors that occur during login
       return res
         .status(UNAUTHORIZED)
         .json({ message: "Incorrect email or password" });
