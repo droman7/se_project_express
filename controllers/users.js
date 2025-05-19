@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../utils/config");
 const User = require("../models/user");
@@ -26,55 +27,47 @@ const getUsers = (req, res) => {
 
 // Create user
 const createUser = (req, res) => {
-  const { email, password, name, avatar } = req.body;
+  const { name, avatar, email, password } = req.body;
 
   if (!email || !password) {
     return res
       .status(BAD_REQUEST)
-      .json({ message: "The 'email' and 'password' fields are required" });
+      .json({ message: "Email and password are required" });
   }
 
-  return User.findOne({ email }).then((existingUser) => {
-    if (existingUser) {
-      return res.status(CONFLICT).json({ message: "Email already exists" });
-    }
+  if (!validator.isEmail(email)) {
+    return res.status(BAD_REQUEST).json({ message: "Invalid email format" });
+  }
 
-    return bcrypt
-      .hash(password, 10)
-      .then((hashedPassword) => {
-        const newUser = new User({
-          email,
-          password: hashedPassword,
-          name,
-          avatar,
-        });
-        return newUser.save();
-      })
-      .then((savedUser) => {
-        const {
-          _id,
-          email: userEmail,
-          name: savedName,
-          avatar: savedAvatar,
-        } = savedUser;
+  User.findOne({ email })
+    .then((existingUser) => {
+      if (existingUser) {
+        return res.status(CONFLICT).json({ message: "Email already exists" });
+      }
 
-        return res.status(CREATED).json({
-          _id,
-          email: userEmail,
-          name: savedName,
-          avatar: savedAvatar,
+      return bcrypt
+        .hash(password, 10)
+        .then((hash) => User.create({ name, avatar, email, password: hash }))
+        .then((user) => {
+          res.status(CREATED).send({
+            name: user.name,
+            avatar: user.avatar,
+            email: user.email,
+            _id: user._id,
+          });
         });
-      })
-      .catch((err) => {
-        console.error(err);
-        if (err.name === "ValidationError") {
-          return res.status(BAD_REQUEST).json({ message: "Invalid user data" });
-        }
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.name === "ValidationError") {
         return res
-          .status(INTERNAL_SERVER_ERROR)
-          .json({ message: "Internal server error" });
-      });
-  });
+          .status(BAD_REQUEST)
+          .json({ message: "Invalid request data" });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .json({ message: "An error occurred on the server" });
+    });
 };
 
 // GET current user
@@ -100,23 +93,25 @@ const getCurrentUser = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res
+      .status(BAD_REQUEST)
+      .json({ message: "Email and password are required" });
+  }
+
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
-      res.send({ token });
+      return res.status(OK).send({ token });
     })
     .catch((err) => {
-      if (err.message === "Incorrect email or password") {
-        return res
-          .status(UNAUTHORIZED)
-          .send({ message: "Authorization required" });
-      }
       console.error(err);
+      // Handle any errors that occur during login
       return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error occurred on the server" });
+        .status(UNAUTHORIZED)
+        .json({ message: "Incorrect email or password" });
     });
 };
 

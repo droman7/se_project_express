@@ -104,14 +104,17 @@ const deleteItem = (req, res) => {
     .findById(itemId)
     .orFail()
     .then((item) => {
-      if (item.owner.toString() !== req.user._id) {
+      if (!item) {
+        return res.status(NOT_FOUND).send({ message: "Item not found" });
+      }
+      if (!item.owner.equals(req.user._id)) {
         return res
           .status(FORBIDDEN)
-          .send({ message: "Not authorized to delete" });
+          .send({ message: "You do not have permission to delete this item" });
       }
-      return clothingItem
-        .findByIdAndRemove(itemId)
-        .then(() => res.status(OK).send({ message: "Item deleted" }));
+      return item.deleteOne().then(() => {
+        res.status(OK).send({ message: "Item deleted" });
+      });
     })
     .catch((err) => {
       console.error(err);
