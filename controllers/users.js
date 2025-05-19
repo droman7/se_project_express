@@ -39,35 +39,34 @@ const createUser = (req, res) => {
     return res.status(BAD_REQUEST).json({ message: "Invalid email format" });
   }
 
-  User.findOne({ email })
-    .then((existingUser) => {
-      if (existingUser) {
-        return res.status(CONFLICT).json({ message: "Email already exists" });
-      }
+  User.findOne({ email }).then((existingUser) => {
+    if (existingUser) {
+      return res.status(CONFLICT).json({ message: "Email already exists" });
+    }
 
-      return bcrypt
-        .hash(password, 10)
-        .then((hash) => User.create({ name, avatar, email, password: hash }))
-        .then((user) => {
-          res.status(CREATED).send({
-            name: user.name,
-            avatar: user.avatar,
-            email: user.email,
-            _id: user._id,
-          });
+    return bcrypt
+      .hash(password, 10)
+      .then((hash) => User.create({ name, avatar, email, password: hash }))
+      .then((user) => {
+        return res.status(CREATED).send({
+          name: user.name,
+          avatar: user.avatar,
+          email: user.email,
+          _id: user._id,
         });
-    })
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "ValidationError") {
+      })
+      .catch((err) => {
+        console.error(err);
+
+        if (err.name === "ValidationError") {
+          return res.status(BAD_REQUEST).json({ message: err.message });
+        }
+
         return res
-          .status(BAD_REQUEST)
-          .json({ message: "Invalid request data" });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .json({ message: "An error occurred on the server" });
-    });
+          .status(INTERNAL_SERVER_ERROR)
+          .json({ message: "An error occurred on the server" });
+      });
+  });
 };
 
 // GET current user
