@@ -3,7 +3,6 @@ const {
   OK,
   CREATED,
   BAD_REQUEST,
-  FORBIDDEN,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
 } = require("../utils/errors");
@@ -105,11 +104,9 @@ const deleteItem = (req, res) => {
     .findOneAndDelete({ _id: itemId, owner: userId })
     .then((item) => {
       if (!item) {
-        return res
-          .status(NOT_FOUND)
-          .send({
-            message: "Item not found or you don't have permission to delete it",
-          });
+        return res.status(NOT_FOUND).send({
+          message: "Item not found or you don't have permission to delete it",
+        });
       }
       return res.status(OK).send({ message: "Item deleted successfully" });
     })
