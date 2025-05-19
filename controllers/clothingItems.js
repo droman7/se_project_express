@@ -99,35 +99,30 @@ const dislikeItem = (req, res) => {
 // Delete clothing items
 const deleteItem = (req, res) => {
   const { itemId } = req.params;
+  const userId = req.user._id;
 
-  return clothingItem
-    .findById(itemId)
-    .orFail()
+  clothingItem
+    .findOneAndDelete({ _id: itemId, owner: userId })
     .then((item) => {
       if (!item) {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
-      }
-      if (!item.owner.equals(req.user._id)) {
         return res
-          .status(FORBIDDEN)
-          .send({ message: "You do not have permission to delete this item" });
+          .status(NOT_FOUND)
+          .send({
+            message: "Item not found or you don't have permission to delete it",
+          });
       }
-      return item.deleteOne().then(() => {
-        res.status(OK).send({ message: "Item deleted" });
-      });
+      return res.status(OK).send({ message: "Item deleted successfully" });
     })
     .catch((err) => {
       console.error(err);
-      console.log("Error name:", err.name);
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
-      }
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid item ID" });
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid item ID format" });
       }
       return res
         .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error occurred on the server" });
+        .send({ message: "Error deleting the item" });
     });
 };
 
