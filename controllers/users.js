@@ -13,18 +13,6 @@ const {
   INTERNAL_SERVER_ERROR,
 } = require("../utils/errors");
 
-// GET users
-const getUsers = (req, res) => {
-  User.find({})
-    .then((users) => res.status(OK).send(users))
-    .catch((err) => {
-      console.error(err);
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error occurred on the server" });
-    });
-};
-
 // Create user
 const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
@@ -39,34 +27,35 @@ const createUser = (req, res) => {
     return res.status(BAD_REQUEST).json({ message: "Invalid email format" });
   }
 
-  return User.findOne({ email }).then((existingUser) => {
-    if (existingUser) {
-      return res.status(CONFLICT).json({ message: "Email already exists" });
-    }
+  return User.findOne({ email })
+    .then((existingUser) => {
+      if (existingUser) {
+        return res.status(CONFLICT).json({ message: "Email already exists" });
+      }
 
-    return bcrypt
-      .hash(password, 10)
-      .then((hash) => User.create({ name, avatar, email, password: hash }))
-      .then((user) => {
-        res.status(CREATED).send({
-          name: user.name,
-          avatar: user.avatar,
-          email: user.email,
-          _id: user._id,
+      return bcrypt
+        .hash(password, 10)
+        .then((hash) => User.create({ name, avatar, email, password: hash }))
+        .then((user) => {
+          res.status(CREATED).send({
+            name: user.name,
+            avatar: user.avatar,
+            email: user.email,
+            _id: user._id,
+          });
         });
-      })
-      .catch((err) => {
-        console.error(err);
+    })
+    .catch((err) => {
+      console.error(err);
 
-        if (err.name === "ValidationError") {
-          return res.status(BAD_REQUEST).json({ message: err.message });
-        }
+      if (err.name === "ValidationError") {
+        return res.status(BAD_REQUEST).json({ message: err.message });
+      }
 
-        return res
-          .status(INTERNAL_SERVER_ERROR)
-          .json({ message: "An error occurred on the server" });
-      });
-  });
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .json({ message: "An error occurred on the server" });
+    });
 };
 
 // GET current user
@@ -107,9 +96,14 @@ const login = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
+
+      if (err.message === "Incorrect email or password") {
+        return res.status(UNAUTHORIZED).json({ message: err.message });
+      }
+
       return res
-        .status(UNAUTHORIZED)
-        .json({ message: "Incorrect email or password" });
+        .status(INTERNAL_SERVER_ERROR)
+        .json({ message: "An error occurred on the server" });
     });
 };
 
@@ -142,7 +136,6 @@ const updateCurrentUser = (req, res) => {
 };
 
 module.exports = {
-  getUsers,
   createUser,
   getCurrentUser,
   login,

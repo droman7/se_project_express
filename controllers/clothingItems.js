@@ -101,28 +101,32 @@ const deleteItem = (req, res) => {
   const userId = req.user._id;
 
   clothingItem
-    .findOneAndDelete({ _id: itemId, owner: userId })
+    .findById(itemId)
     .then((item) => {
       if (!item) {
-        return res.status(NOT_FOUND).send({
-          message: "Item not found or you don't have permission to delete it",
-        });
+        return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      return res.status(OK).send({ message: "Item deleted successfully" });
+
+      if (item.owner.toString() !== userId.toString()) {
+        return res
+          .status(FORBIDDEN)
+          .send({ message: "You are not authorized to delete this item" });
+      }
+
+      return item.deleteOne().then(() => {
+        res.status(OK).send({ message: "Item deleted successfully" });
+      });
     })
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid item ID format" });
+        return res.status(BAD_REQUEST).send({ message: "Invalid item ID" });
       }
       return res
         .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "Error deleting the item" });
+        .send({ message: "An error occurred on the server" });
     });
 };
-
 module.exports = {
   getItems,
   createItem,
