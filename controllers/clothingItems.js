@@ -3,6 +3,7 @@ const {
   OK,
   CREATED,
   BAD_REQUEST,
+  FORBIDDEN,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
 } = require("../utils/errors");
