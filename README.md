@@ -1,7 +1,9 @@
-# WTWR (What to Wear?): Back End Project Overview & Technologies
+WTWR SPRINT 15 Front-end Deployment
 
-This project, developed during Sprint 12, focuses on building the backend server for the WTWR (What to Wear?) application. The goal is to enable data handling and user interaction through a RESTful API.
+Created subdomains using Google Cloud VM.
+Issued SSL certificates using Certbot.
+Nginx was used to serve HTTPS traffic and automatically redirects HTTP traffic to HTTPS.
 
-We implemented standard HTTP methods — GET, POST, PUT, DELETE — to retrieve, create, update, and delete resources. These actions are handled through an API built with Express.js and powered by Node.js, allowing efficient communication between the client and server.
+The backend runs on Node.js with Express and MongoDB and is managed by PM2 for stability. The frontend is a React app served as static files through nginx. All parts are connected securely over HTTPS.
 
-MongoDB was used as the database, with Mongoose managing schemas and interactions. We also integrated middleware for user simulation, request parsing, and testing support.
+Frontend: caliberwtwr.minecraftnoob.com
