@@ -5,10 +5,10 @@ const { JWT_SECRET } = require("../utils/config");
 const User = require("../models/user");
 const { CREATED, OK } = require("../utils/errors");
 
-const { BadRequestError } = require("../utils/badrequesterror");
-const { ConflictError } = require("../utils/confilcterror");
-const { NotFoundError } = require("../utils/notfounderror");
-const { UnauthorizedError } = require("../utils/unauthorizederror");
+const BadRequestError = require("../utils/badrequesterror");
+const ConflictError = require("../utils/confilcterror");
+const NotFoundError = require("../utils/notfounderror");
+const UnauthorizedError = require("../utils/unauthorizederror");
 
 // Create user
 const createUser = (req, res, next) => {
@@ -49,7 +49,8 @@ const createUser = (req, res, next) => {
 };
 
 // GET current user
-const getCurrentUser = (req, res, next) => User.findById(req.user._id)
+const getCurrentUser = (req, res, next) =>
+  User.findById(req.user._id)
     .orFail(() => new NotFoundError("User not found"))
     .then((user) => res.status(OK).send(user))
     .catch((err) => {
